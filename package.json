@@ -1,0 +1,27 @@
+{
+  "name": "pumpkye",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "tsc && node dist/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pumpkye/AutoChessGameServer.git"
+  },
+  "author": "pumpkye",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pumpkye/AutoChessGameServer/issues"
+  },
+  "homepage": "https://github.com/pumpkye/AutoChessGameServer#readme",
+  "dependencies": {
+    "typescript": "^3.5.1",
+    "ws": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^6.0.1"
+  }
+}
