@@ -40,7 +40,10 @@ class GameManager {
         let curTimeStamp = new Date().getTime();
         this.dt = curTimeStamp - this.timeStamp;
         this.timeStamp = curTimeStamp;
-
+        for (let i = 0; i < this.gameRoom.length; i++) {
+            const room = this.gameRoom[i];
+            room.update(this.dt);
+        }
 
     }
 

@@ -1,5 +1,5 @@
 import { ChessNpcInfo } from "./ChessNpcInfo";
-import { LevelExpConfig, BuyExpConfig, GoldConfig } from "../config/GameConfig";
+import { LevelExpConfig, ExpConfig, GoldConfig } from "../config/GameConfig";
 import { MaxLevel } from "../config/GameConfig";
 
 export class User {
@@ -107,7 +107,7 @@ export class User {
     }
 
     buyExp() {
-        if (this.gold < BuyExpConfig.cost) {
+        if (this.gold < ExpConfig.buyCost) {
             console.log("金币不够");
             return false;
         }
@@ -115,8 +115,8 @@ export class User {
             console.log("已经是最大等级");
             return false;
         }
-        this.gold -= BuyExpConfig.cost;
-        this.addExp(BuyExpConfig.exp);
+        this.gold -= ExpConfig.buyCost;
+        this.addExp(ExpConfig.buyExp);
     }
 
     /**

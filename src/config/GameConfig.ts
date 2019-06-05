@@ -90,9 +90,10 @@ export const LevelExpConfig: any = {
     [8]: 46,
 }
 
-export const BuyExpConfig = {
-    cost: 5,
-    exp: 4,
+export const ExpConfig = {
+    buyCost: 5,
+    buyExp: 4,
+    everyRound: 1,
 }
 
 export const GoldConfig = {
@@ -131,4 +132,13 @@ export const RoomConfig = {
      * 同一房间最大玩家数
      */
     maxUser: 8,
+}
+
+export const RoundConfig: any = {
+    roundStateTime: {
+        [1]: 60000,
+        [2]: 3000,
+        [3]: 2000,
+        [4]: 1000,
+    }
 }

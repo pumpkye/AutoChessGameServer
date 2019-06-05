@@ -1,18 +1,84 @@
 import { User } from "./User";
 
 import { CardPool } from "./CardPool";
-import { RoomConfig } from "../config/GameConfig";
+import { RoomConfig, RoundConfig, ExpConfig } from "../config/GameConfig";
 
+enum RoundState {
+    none,
+    /**
+     * 布局阶段
+     */
+    layout,
+    /**
+     * 战斗倒计时
+     */
+    prepare,
+    /**
+     * 战斗
+     */
+    battle,
+    /**
+     * 战斗结算
+     */
+    battleEnd,
+}
 export class Room {
     id: number;
     userMap = new Map<number, User>();
     userCount = 0;
     cardPool: CardPool;
+
+    roundIdx: number;
+    roundState = RoundState.none;
+    roundStateTime: number;
+
     constructor(id: number) {
         this.id = id;
     }
 
     update(dt: number) {
+        this.roundStateTime -= dt;
+        if (this.roundStateTime < 0) {
+            this.turnToNextState();
+        }
+    }
+
+    turnToNextState() {
+        if (this.roundState == RoundState.battleEnd) {
+            this.roundState = RoundState.none;
+            this.roundIdx++;
+        }
+        this.roundState = this.roundState + 1;
+        this.roundStateTime = RoundConfig.roundStateTime[this.roundState];
+        switch (this.roundState) {
+            case RoundState.layout:
+                this.autoAddGoldAndExp();
+                this.refreshAllUserPool();
+                break;
+            case RoundState.prepare:
+                break;
+            case RoundState.battle:
+                //todo 调用battleServer计算战斗结果
+                this.doBattle();
+                break;
+            case RoundState.battleEnd:
+                break;
+            default:
+                break;
+        }
+        this.boardcastBattleState();
+    }
+
+    startGame() {
+        if (!this.cardPool) {
+            this.cardPool = new CardPool();
+        } else {
+            this.cardPool.init();
+        }
+        this.userMap.forEach((user, userId) => {
+            user.init();
+            // user.cardPool = this.cardPool.getCardGroup(user.level);
+        });
 
     }
 
@@ -41,15 +107,10 @@ export class Room {
         return this.userCount == RoomConfig.maxUser;
     }
 
-    startGame() {
-        if (!this.cardPool) {
-            this.cardPool = new CardPool();
-        } else {
-            this.cardPool.init();
-        }
+    autoAddGoldAndExp() {
         this.userMap.forEach((user, userId) => {
-            user.init();
-            user.cardPool = this.cardPool.getCardGroup(user.level);
+            user.autoAddGold();
+            user.addExp(ExpConfig.everyRound);
         });
     }
 
@@ -77,5 +138,25 @@ export class Room {
         if (user) {
             user.buyCard(carIdx);
         }
+    }
+
+    /**
+     * 向所有房间内的客户端广播state变化
+     */
+    boardcastBattleState() {
+
+    }
+
+    /**
+     * 调用另一台battle服务器计算战斗结果
+     * 依据之前的统计：一颗i5-8400单核单线程每秒可以计算8人口对局300场
+     */
+    async doBattle() {
+        // let ret = await sendBattle();
+        this.boardcastBattleResult();
+    }
+
+    boardcastBattleResult() {
+
     }
 }
