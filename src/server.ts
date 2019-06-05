@@ -1,10 +1,6 @@
-// 导入WebSocket模块:
 import webSocket = require('ws');
 
-// 引用Server类:
 const WebSocketServer = webSocket.Server;
-
-// 实例化:
 const wss = new WebSocketServer({
     port: 3001
 });

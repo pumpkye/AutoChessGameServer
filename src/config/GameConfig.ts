@@ -1,3 +1,7 @@
+/**
+ * 游戏配置，加快了游戏节奏，比如1级的时候有2人口，提高了每回合获得金钱和利息倍率
+ */
+
 export const CardNumConfig: any = {
     //[quality] : cardNum
     [1]: 50,
@@ -60,6 +64,8 @@ export const LevelRateConfig: any = {
     },
 }
 
+export const MaxLevel = 8;
+
 export const LevelCountConfig: any = {
     //[level]:npcCount
     [1]: 2,
@@ -70,4 +76,59 @@ export const LevelCountConfig: any = {
     [6]: 7,
     [7]: 8,
     [8]: 10,
+}
+
+export const LevelExpConfig: any = {
+    //[level]:exp 累计经验
+    [1]: 0,
+    [2]: 1,
+    [3]: 3,
+    [4]: 7,
+    [5]: 13,
+    [6]: 21,
+    [7]: 31,
+    [8]: 46,
+}
+
+export const BuyExpConfig = {
+    cost: 5,
+    exp: 4,
+}
+
+export const GoldConfig = {
+    /**
+     * 最大金钱
+     */
+    max: 200,
+    /**
+     * 每回合获得金钱
+     */
+    everyRound: 8,
+    /**
+     * 利息倍率，20%
+     */
+    interestRate: 20,
+    /**
+     * 每回合最高利息
+     */
+    maxInterest: 10,
+    /**
+     * 获胜奖励
+     */
+    winGold: 2,
+    /**
+     * 连胜奖励
+     */
+    winContinue: [0, 1, 2, 3, 4],
+    /**
+     * 连败补偿 
+     */
+    loseContinue: [0, 1, 2, 3, 4, 5]
+}
+
+export const RoomConfig = {
+    /**
+     * 同一房间最大玩家数
+     */
+    maxUser: 8,
 }
