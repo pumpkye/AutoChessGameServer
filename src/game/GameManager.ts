@@ -25,7 +25,7 @@ class GameManager {
         this.timeStamp = new Date().getTime();
         this.schedule = setInterval(function () {
             g_GameManager.update();
-        }, 250);
+        }, 100);
 
     }
 

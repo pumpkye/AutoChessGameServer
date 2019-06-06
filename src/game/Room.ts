@@ -149,7 +149,6 @@ export class Room {
 
     /**
      * 调用另一台battle服务器计算战斗结果
-     * 依据之前的统计：一颗i5-8400单核单线程每秒可以计算8人口对局300场
      */
     async doBattle() {
         // let ret = await sendBattle();
