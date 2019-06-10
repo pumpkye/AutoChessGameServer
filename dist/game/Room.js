@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const User_1 = require("./User");
 const CardPool_1 = require("./CardPool");
 const GameConfig_1 = require("../config/GameConfig");
+const UserManager_1 = require("../connect/UserManager");
 var RoundState;
 (function (RoundState) {
     RoundState[RoundState["none"] = 0] = "none";
@@ -137,6 +138,14 @@ class Room {
         this.boardcastBattleResult();
     }
     boardcastBattleResult() {
+    }
+    /**
+     * 向房间内广播消息
+     */
+    sendMsgToRoom(msg) {
+        this.userMap.forEach((user, userId) => {
+            UserManager_1.g_UserManager.sendMsgToUser(userId, msg);
+        });
     }
 }
 exports.Room = Room;

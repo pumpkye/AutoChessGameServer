@@ -4,6 +4,9 @@ const webSocket = require("ws");
 const UserManager_1 = require("./UserManager");
 class Connector {
     constructor() {
+        this.dispatchList = [
+            UserManager_1.g_UserManager,
+        ];
         // this.wsIdSeed = 0;
         this.init();
     }
@@ -32,11 +35,12 @@ class Connector {
     dispatchMsg(wsId, data) {
         console.log(`dispatchMsg wsId:${wsId},msg:${data}`);
         let msg = JSON.parse(data);
-        UserManager_1.g_UserManager.msgReqUserInfo(msg.data, wsId);
-        // console.log(typeof (g_UserManager[msg.name]));
-        // if (typeof (g_UserManager[msg.name]) === "function") {
-        //     g_UserManager[msg.name](msg, wsId);
-        // }
+        for (let i = 0; i < this.dispatchList.length; i++) {
+            const data = this.dispatchList[i];
+            if (typeof (data[msg.name]) === "function") {
+                data[msg.name](msg.data, wsId);
+            }
+        }
     }
     sendMsg(wsId, msg) {
         console.log(`sendMsg wsId:${wsId}, msg:${JSON.stringify(msg)}`);

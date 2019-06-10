@@ -2,6 +2,9 @@ import { User } from "./User";
 
 import { CardPool } from "./CardPool";
 import { RoomConfig, RoundConfig, ExpConfig } from "../config/GameConfig";
+import { g_UserManager } from "../connect/UserManager";
+import { MessageBase } from "../message/MessagegBase";
+import { MsgRefreshRoomPlayer, PlayerInfo, MsgRefreshCardPool } from "../message/RoomMsg";
 
 enum RoundState {
     none,
@@ -28,6 +31,7 @@ export class Room {
     userCount = 0;
     cardPool: CardPool;
 
+    isGameStart = false;
     roundIdx: number;
     roundState = RoundState.none;
     roundStateTime: number;
@@ -70,6 +74,7 @@ export class Room {
     }
 
     startGame() {
+        this.isGameStart = true;
         if (!this.cardPool) {
             this.cardPool = new CardPool();
         } else {
@@ -83,6 +88,9 @@ export class Room {
     }
 
     addUser(userId: number, name?: string) {
+        if (this.isGameStart) {
+            console.log("游戏已开始")
+        }
         if (this.isFull) {
             console.log("房间已满");
             return false;
@@ -104,7 +112,7 @@ export class Room {
     }
 
     get isFull() {
-        return this.userCount == RoomConfig.maxUser;
+        return this.userCount == RoomConfig.maxUser || this.isGameStart;
     }
 
     autoAddGoldAndExp() {
@@ -123,6 +131,12 @@ export class Room {
         });
         this.userMap.forEach((user, userId) => {
             user.cardPool = this.cardPool.getCardGroup(user.level);
+        });
+        this.userMap.forEach((user, userId) => {
+            let msg = new MsgRefreshCardPool();
+            msg.data.userId = userId;
+            msg.data.cardPool = user.getCardPoolArr();
+            g_UserManager.sendMsgToUser(userId, msg);
         });
     }
 
@@ -157,5 +171,40 @@ export class Room {
 
     boardcastBattleResult() {
 
+    }
+
+    /**
+     * 刷新房间内的所有player
+     */
+    boardcastAllPlayer() {
+        let msg = new MsgRefreshRoomPlayer()
+        msg.data.roomId = this.id;
+        let playerList = new Array();
+        this.userMap.forEach((user, userId) => {
+            let playerInfo: PlayerInfo = {
+                id: user.id,
+                name: user.name,
+                level: user.level,
+                exp: user.exp,
+                gold: user.gold,
+                winContinueCount: user.winContinueCount,
+                loseContinueCount: user.loseContinueCount,
+                cardList: user.getCardListArr(),
+                layoutList: user.getLayoutListArr(),
+            }
+            playerList.push(playerInfo);
+        });
+        msg.data.playerList = playerList;
+        this.sendMsgToRoom(msg);
+    }
+
+
+    /**
+     * 向房间内广播消息
+     */
+    sendMsgToRoom(msg: MessageBase) {
+        this.userMap.forEach((user, userId) => {
+            g_UserManager.sendMsgToUser(userId, msg);
+        });
     }
 }

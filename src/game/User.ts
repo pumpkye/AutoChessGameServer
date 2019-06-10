@@ -162,4 +162,31 @@ export class User {
         }
         this.addGold(gold);
     }
+
+    /**
+     * 将cardList数据按照Array<{ idx: number, baseId: number }>类型返回
+     */
+    getCardListArr() {
+        let cardArr = new Array<{ idx: number, baseId: number }>();
+        this.cardList.forEach((baseId, idx) => {
+            cardArr.push({ idx, baseId });
+        });
+        return cardArr;
+    }
+
+    getLayoutListArr() {
+        let layoutArr = new Array<ChessNpcInfo>();
+        this.layoutList.forEach((chessInfo, thisId) => {
+            layoutArr.push(chessInfo);
+        });
+        return layoutArr;
+    }
+
+    getCardPoolArr() {
+        let cardArr = new Array<{ idx: number, baseId: number }>();
+        this.cardPool.forEach((baseId, idx) => {
+            cardArr.push({ idx, baseId });
+        });
+        return cardArr;
+    }
 }

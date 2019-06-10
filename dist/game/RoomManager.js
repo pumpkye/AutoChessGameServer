@@ -7,23 +7,26 @@ class RoomManager {
         this.init();
     }
     init() {
-        this.roomList = new Map();
+        this.roomList = new Array();
     }
     createRoom() {
         this.roomIdSeed++;
         let room = new Room_1.Room(this.roomIdSeed);
-        this.roomList.set(room.id, room);
+        this.roomList[room.id] = room;
         return room.id;
     }
     getRoom(id) {
-        return this.roomList.get(id);
+        this.roomList[id];
     }
     findFreeRoom() {
-        this.roomList.forEach((room, roomId) => {
-            if (!room.isFull) {
-                return roomId;
+        for (const roomId in this.roomList) {
+            if (this.roomList.hasOwnProperty(roomId)) {
+                const room = this.roomList[roomId];
+                if (!room.isFull) {
+                    return room.id;
+                }
             }
-        });
+        }
         return this.createRoom();
     }
 }
