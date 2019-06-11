@@ -31,6 +31,9 @@ class Connector {
             ws.on('message', function (message: any) {
                 g_Connector.dispatchMsg(id, message);
             })
+            ws.on('close', function () {
+                g_Connector.removeWs(id);
+            })
         });
     }
 
@@ -39,6 +42,14 @@ class Connector {
         let id = this.wsIdSeed;
         this.wsList.set(id, { ws, userId: -1 });
         return id;
+    }
+
+    removeWs(wsId: number) {
+        let userId = this.getWsUserId(wsId);
+        if (userId) {
+            g_UserManager.removeUser(userId);
+        }
+        this.wsList.delete(wsId);
     }
 
     setWsUserId(wsId: number, userId: number) {

@@ -50,6 +50,15 @@ class GameManager {
     addGameRoom(room: Room) {
         this.gameRoom.push(room);
     }
+
+    removeGameRoom(roomId: number) {
+        for (let i = 0; i < this.gameRoom.length; i++) {
+            const room = this.gameRoom[i];
+            if (room.id == roomId) {
+                this.gameRoom.splice(i, 1);
+            }
+        }
+    }
 }
 
 export const g_GameManager = new GameManager();

@@ -1,9 +1,12 @@
 import { ChessNpcInfo } from "./ChessNpcInfo";
 import { LevelExpConfig, ExpConfig, GoldConfig } from "../config/GameConfig";
 import { MaxLevel } from "../config/GameConfig";
+import { MsgRefreshCardPool } from "../message/RoomMsg";
+import { g_UserManager } from "../connect/UserManager";
 
 export class User {
     id: number;
+    roomId: number;
     name: string;
     level: number;
     exp: number;
@@ -17,9 +20,9 @@ export class User {
      */
     loseContinueCount: number;
     /**
-     * 持有的卡,<idx,baseId>
+     * 持有的卡,<idx,ChessNpcInfo>
      */
-    cardList: Map<number, number>;
+    cardList: Map<number, ChessNpcInfo>;
     /**
      * 布局的npc,<thisId,chessNpcInfo>
      */
@@ -29,8 +32,11 @@ export class User {
      */
     cardPool: Map<number, number>;
 
-    constructor(id: number) {
+    npcThisIdSeed = 0;
+
+    constructor(id: number, roomId: number) {
         this.id = id;
+        this.roomId = roomId;
         this.name = "棋手" + id;
         // this.init();
     }
@@ -47,6 +53,13 @@ export class User {
         this.cardList = new Map();
         this.layoutList = new Map();
         this.cardPool = new Map();
+
+        this.npcThisIdSeed = 0;
+    }
+
+    getNewNpcThisId() {
+        this.npcThisIdSeed++;
+        return this.npcThisIdSeed;
     }
 
     moveCardToLayout(idx: number, pos: { x: number, y: number }) {
@@ -65,9 +78,10 @@ export class User {
             console.log("尝试放置到已有棋子的位置上");
             return false;
         }
-        let baseId = this.cardList.get(idx);
+        let npcInfo = this.cardList.get(idx);
         this.cardList.delete(idx);
-
+        npcInfo.pos = pos;
+        this.layoutList.set(npcInfo.thisId, npcInfo);
     }
 
     /**
@@ -80,9 +94,12 @@ export class User {
             console.log("卡池里没有这张卡");
             return false;
         }
+        this.cardPool.delete(idx);
         for (let i = 0; i < 8; i++) {
             if (!this.cardList.get(i)) {
-                this.cardList.set(i, baseId);
+                let npcInfo = new ChessNpcInfo(this.getNewNpcThisId(), baseId, 1, { x: 0, y: 0 });
+                this.cardList.set(i, npcInfo);
+                this.sendCardPoolToClient();
                 return true;
             }
         }
@@ -164,12 +181,22 @@ export class User {
     }
 
     /**
-     * 将cardList数据按照Array<{ idx: number, baseId: number }>类型返回
+     * 将卡池内容同步给客户端
+     */
+    sendCardPoolToClient() {
+        let msg = new MsgRefreshCardPool();
+        msg.data.userId = this.id;
+        msg.data.cardPool = this.getCardPoolArr();
+        g_UserManager.sendMsgToUser(this.id, msg);
+    }
+
+    /**
+     * 将cardList数据按照Array<{ idx: number, npcInfo: ChessNpcInfo }>类型返回
      */
     getCardListArr() {
-        let cardArr = new Array<{ idx: number, baseId: number }>();
-        this.cardList.forEach((baseId, idx) => {
-            cardArr.push({ idx, baseId });
+        let cardArr = new Array<{ idx: number, npcInfo: ChessNpcInfo }>();
+        this.cardList.forEach((npcInfo, idx) => {
+            cardArr.push({ idx, npcInfo });
         });
         return cardArr;
     }

@@ -1,6 +1,7 @@
 import { MsgResUserInfo, MsgReqUserInfo } from "../message/UserMsg";
 import { g_Connector } from "./connector";
 import { MessageBase } from "../message/MessagegBase";
+import { g_RoomManager } from "../game/RoomManager";
 
 interface User {
     id: number;
@@ -27,6 +28,7 @@ class UserManager {
     }
 
     removeUser(userId: number) {
+        g_RoomManager.removeUserFromRoom(userId);
         this.userMap.delete(userId);
     }
 
