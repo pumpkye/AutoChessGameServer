@@ -4,7 +4,7 @@ import { MaxLevel } from "../config/GameConfig";
 import { MsgRefreshCardPool } from "../message/RoomMsg";
 import { g_UserManager } from "../connect/UserManager";
 
-export class User {
+export class Player {
     id: number;
     roomId: number;
     name: string;
@@ -195,25 +195,31 @@ export class User {
      */
     getCardListArr() {
         let cardArr = new Array<{ idx: number, npcInfo: ChessNpcInfo }>();
-        this.cardList.forEach((npcInfo, idx) => {
-            cardArr.push({ idx, npcInfo });
-        });
+        if (this.cardList) {
+            this.cardList.forEach((npcInfo, idx) => {
+                cardArr.push({ idx, npcInfo });
+            });
+        }
         return cardArr;
     }
 
     getLayoutListArr() {
         let layoutArr = new Array<ChessNpcInfo>();
-        this.layoutList.forEach((chessInfo, thisId) => {
-            layoutArr.push(chessInfo);
-        });
+        if (this.layoutList) {
+            this.layoutList.forEach((chessInfo, thisId) => {
+                layoutArr.push(chessInfo);
+            });
+        }
         return layoutArr;
     }
 
     getCardPoolArr() {
         let cardArr = new Array<{ idx: number, baseId: number }>();
-        this.cardPool.forEach((baseId, idx) => {
-            cardArr.push({ idx, baseId });
-        });
+        if (this.cardPool) {
+            this.cardPool.forEach((baseId, idx) => {
+                cardArr.push({ idx, baseId });
+            });
+        }
         return cardArr;
     }
 }

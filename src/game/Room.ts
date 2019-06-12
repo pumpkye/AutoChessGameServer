@@ -1,10 +1,10 @@
-import { User } from "./User";
+import { Player } from "./Player";
 
 import { CardPool } from "./CardPool";
 import { RoomConfig, RoundConfig, ExpConfig } from "../config/GameConfig";
 import { g_UserManager } from "../connect/UserManager";
 import { MessageBase } from "../message/MessagegBase";
-import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState } from "../message/RoomMsg";
+import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState, MsgResStartGame } from "../message/RoomMsg";
 import { g_GameManager } from "./GameManager";
 
 enum RoundState {
@@ -32,7 +32,7 @@ export class Room {
      * 房主
      */
     masterId: number;
-    userMap = new Map<number, User>();
+    userMap = new Map<number, Player>();
     userCount = 0;
     cardPool: CardPool;
 
@@ -89,6 +89,10 @@ export class Room {
             user.init();
         });
         g_GameManager.addGameRoom(this);
+
+        let msg = new MsgResStartGame()
+        msg.data.isStart = true;
+        this.sendMsgToRoom(msg);
     }
 
     addUser(userId: number, name?: string) {
@@ -99,7 +103,7 @@ export class Room {
             console.log("房间已满");
             return false;
         }
-        let user = new User(userId, this.id);
+        let user = new Player(userId, this.id);
         if (name) {
             user.name = name;
         }
@@ -148,7 +152,7 @@ export class Room {
         });
     }
 
-    refreshUserPool(user: User) {
+    refreshUserPool(user: Player) {
         user.cardPool.forEach((value, key) => {
             this.cardPool.pushBackToCardGroup(value);
         });

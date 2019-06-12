@@ -32,6 +32,13 @@ export class MsgReqStartGame extends MessageBase {
     data: {}
 }
 
+export class MsgResStartGame extends MessageBase {
+    name = "msgResStartGame";
+    data: {
+        isStart: boolean;
+    }
+}
+
 /**
  * 回合状态
  */

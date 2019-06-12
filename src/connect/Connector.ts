@@ -1,6 +1,7 @@
 import webSocket = require('ws');
 import { MessageBase } from '../message/MessagegBase';
 import { g_UserManager } from './UserManager';
+import { g_RoomManager } from '../game/RoomManager';
 
 class Connector {
     wss: webSocket.Server;
@@ -10,6 +11,7 @@ class Connector {
 
     readonly dispatchList: Array<any> = [
         g_UserManager,
+        g_RoomManager,
     ];
     constructor() {
         // this.wsIdSeed = 0;
@@ -32,6 +34,7 @@ class Connector {
                 g_Connector.dispatchMsg(id, message);
             })
             ws.on('close', function () {
+                console.log(`断开链接${id}`);
                 g_Connector.removeWs(id);
             })
         });
@@ -47,6 +50,7 @@ class Connector {
     removeWs(wsId: number) {
         let userId = this.getWsUserId(wsId);
         if (userId) {
+            console.log(`删除User${userId}`);
             g_UserManager.removeUser(userId);
         }
         this.wsList.delete(wsId);
@@ -78,6 +82,7 @@ class Connector {
         //其他消息传递userId
         let userId = this.getWsUserId(wsId);
         if (userId == -1) {
+            console.log("ws尚未创建user");
             return;
         }
         for (let i = 0; i < this.dispatchList.length; i++) {
