@@ -4,28 +4,10 @@ import { CardPool } from "./CardPool";
 import { RoomConfig, RoundConfig, ExpConfig } from "../config/GameConfig";
 import { g_UserManager } from "../connect/UserManager";
 import { MessageBase } from "../message/MessagegBase";
-import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState, MsgResStartGame } from "../message/RoomMsg";
+import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState, MsgResStartGame, RoundState } from "../message/RoomMsg";
 import { g_GameManager } from "./GameManager";
 
-enum RoundState {
-    none,
-    /**
-     * 布局阶段
-     */
-    layout,
-    /**
-     * 战斗倒计时
-     */
-    prepare,
-    /**
-     * 战斗
-     */
-    battle,
-    /**
-     * 战斗结算
-     */
-    battleEnd,
-}
+
 export class Room {
     id: number;
     /**
@@ -63,6 +45,7 @@ export class Room {
             case RoundState.layout:
                 this.autoAddGoldAndExp();
                 this.refreshAllUserPool();
+                this.boardcastAllPlayer();
                 break;
             case RoundState.prepare:
                 break;
@@ -80,6 +63,10 @@ export class Room {
 
     startGame() {
         this.isGameStart = true;
+        this.roundIdx = 1;
+        this.roundState = RoundState.none;
+        this.roundStateTime = 0;
+
         if (!this.cardPool) {
             this.cardPool = new CardPool();
         } else {
@@ -93,6 +80,7 @@ export class Room {
         let msg = new MsgResStartGame()
         msg.data.isStart = true;
         this.sendMsgToRoom(msg);
+        this.turnToNextState();
     }
 
     addUser(userId: number, name?: string) {
@@ -136,6 +124,7 @@ export class Room {
         this.userMap.forEach((user, userId) => {
             user.autoAddGold();
             user.addExp(ExpConfig.everyRound);
+
         });
     }
 
