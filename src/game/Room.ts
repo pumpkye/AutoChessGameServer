@@ -1,7 +1,7 @@
 import { Player } from "./Player";
 
 import { CardPool } from "./CardPool";
-import { RoomConfig, RoundConfig, ExpConfig } from "../config/GameConfig";
+import { RoomConfig, RoundConfig, ExpConfig, GoldConfig } from "../config/GameConfig";
 import { g_UserManager } from "../connect/UserManager";
 import { MessageBase } from "../message/MessagegBase";
 import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState, MsgResStartGame, RoundState } from "../message/RoomMsg";
@@ -141,6 +141,18 @@ export class Room {
         });
     }
 
+    reqRefreshUserPool(userId: number) {
+        let user = this.userMap.get(userId);
+        if (!user) {
+            return;
+        }
+        let ret = user.reduceGold(GoldConfig.refreshPoolCost);
+        if (ret) {
+            this.refreshUserPool(user);
+            this.boardcastPlayer(userId);
+        }
+    }
+
     refreshUserPool(user: Player) {
         user.cardPool.forEach((value, key) => {
             this.cardPool.pushBackToCardGroup(value);
@@ -155,24 +167,7 @@ export class Room {
             let ret = user.buyCard(carIdx);
             if (ret) {
                 //向房间内广播该玩家的手牌变化
-                let msg = new MsgRefreshRoomPlayer()
-                msg.data.roomId = this.id;
-                msg.data.refreshAll = false;
-                let playerList = new Array();
-                let playerInfo: PlayerInfo = {
-                    id: user.id,
-                    name: user.name,
-                    level: user.level,
-                    exp: user.exp,
-                    gold: user.gold,
-                    winContinueCount: user.winContinueCount,
-                    loseContinueCount: user.loseContinueCount,
-                    cardList: user.getCardListArr(),
-                    layoutList: user.getLayoutListArr(),
-                }
-                playerList.push(playerInfo);
-                msg.data.playerList = playerList;
-                this.sendMsgToRoom(msg);
+                this.boardcastPlayer(userId);
             }
         }
     }
@@ -222,6 +217,34 @@ export class Room {
             }
             playerList.push(playerInfo);
         });
+        msg.data.playerList = playerList;
+        this.sendMsgToRoom(msg);
+    }
+
+    /**
+     * 将某个player的信息向房间广播
+     */
+    boardcastPlayer(playerId: number) {
+        let player = this.userMap.get(playerId);
+        if (!player) {
+            return;
+        }
+        let msg = new MsgRefreshRoomPlayer()
+        msg.data.roomId = this.id;
+        msg.data.refreshAll = false;
+        let playerList = new Array();
+        let playerInfo: PlayerInfo = {
+            id: player.id,
+            name: player.name,
+            level: player.level,
+            exp: player.exp,
+            gold: player.gold,
+            winContinueCount: player.winContinueCount,
+            loseContinueCount: player.loseContinueCount,
+            cardList: player.getCardListArr(),
+            layoutList: player.getLayoutListArr(),
+        }
+        playerList.push(playerInfo);
         msg.data.playerList = playerList;
         this.sendMsgToRoom(msg);
     }

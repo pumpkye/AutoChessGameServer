@@ -45,7 +45,7 @@ export class Player {
      * 每局游戏开始时初始化
      */
     init() {
-        this.level = 1;
+        this.level = 0;
         this.exp = 0;
         this.gold = 0;
         this.winContinueCount = 0;
@@ -151,6 +151,14 @@ export class Player {
             console.log("已经是最大金钱");
             this.gold = GoldConfig.max;
         }
+    }
+
+    reduceGold(gold: number) {
+        if (this.gold < gold) {
+            return false;
+        }
+        this.gold = this.gold - gold;
+        return true;
     }
 
     /**

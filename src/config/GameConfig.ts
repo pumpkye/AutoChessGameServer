@@ -80,14 +80,14 @@ export const LevelCountConfig: any = {
 
 export const LevelExpConfig: any = {
     //[level]:exp 累计经验
-    [1]: 0,
-    [2]: 1,
-    [3]: 3,
-    [4]: 7,
-    [5]: 13,
-    [6]: 21,
-    [7]: 31,
-    [8]: 46,
+    [1]: 1,
+    [2]: 2,
+    [3]: 4,
+    [4]: 8,
+    [5]: 14,
+    [6]: 22,
+    [7]: 32,
+    [8]: 47,
 }
 
 export const ExpConfig = {
@@ -124,7 +124,11 @@ export const GoldConfig = {
     /**
      * 连败补偿 
      */
-    loseContinue: [0, 1, 2, 3, 4, 5]
+    loseContinue: [0, 1, 2, 3, 4, 5],
+    /**
+     * 刷新卡池的价格
+     */
+    refreshPoolCost: 2,
 }
 
 export const RoomConfig = {

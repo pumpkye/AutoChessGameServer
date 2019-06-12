@@ -1,5 +1,5 @@
 import { Room } from "./Room";
-import { MsgReqEnterFreeRoom, MsgResEnterRoom, MsgRefreshRoomPlayer, MsgBuyCard, MsgReqStartGame } from "../message/RoomMsg";
+import { MsgReqEnterFreeRoom, MsgResEnterRoom, MsgRefreshRoomPlayer, MsgBuyCard, MsgReqStartGame, MsgReqRefreshCardPool } from "../message/RoomMsg";
 import { g_UserManager } from "../connect/UserManager";
 
 class RoomManager {
@@ -76,14 +76,6 @@ class RoomManager {
         return room;
     }
 
-    msgBuyCard(msg: MsgBuyCard["data"], userId: number) {
-        let room = this.getUserRoom(userId);
-        if (!room) {
-            return;
-        }
-        room.buyCard(userId, msg.idx);
-    }
-
     msgReqStartGame(msg: MsgReqStartGame["data"], userId: number) {
         let room = this.getUserRoom(userId);
         if (!room) {
@@ -96,6 +88,21 @@ class RoomManager {
         }
     }
 
+    msgBuyCard(msg: MsgBuyCard["data"], userId: number) {
+        let room = this.getUserRoom(userId);
+        if (!room) {
+            return;
+        }
+        room.buyCard(userId, msg.idx);
+    }
+
+    msgReqRefreshCardPool(msg: MsgReqRefreshCardPool["data"], userId: number) {
+        let room = this.getUserRoom(userId);
+        if (!room) {
+            return;
+        }
+        room.reqRefreshUserPool(userId);
+    }
 }
 
 export const g_RoomManager = new RoomManager();

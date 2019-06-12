@@ -37,7 +37,9 @@ export class CardPool {
                 rad = rad - rateConfig[j];
                 if (rad <= 0) {
                     cards.set(i, this.getCard(j));
+                    break;
                 }
+
             }
         }
         return cards;
