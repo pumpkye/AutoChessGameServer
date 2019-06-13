@@ -90,7 +90,8 @@ export class Player {
         let posEnabled = true;
         this.layoutList.forEach((chessNpcInfo, thisId) => {
             if (chessNpcInfo.pos.x == pos.x && chessNpcInfo.pos.y == pos.y) {
-                posEnabled == false;
+                posEnabled = false;
+
             }
         });
         if (!posEnabled) {
@@ -143,7 +144,7 @@ export class Player {
         if (npcList.length < 3) {
             return null;
         }
-        let thisId = this.getNewNpcThisId()
+        let thisId = this.getNewNpcThisId();
         let npcInfo: ChessNpcInfo = {
             thisId,
             baseId: baseInfo.baseId,
@@ -200,6 +201,45 @@ export class Player {
     //         }
     //     }
     // }
+
+    getBackNpc(thisId: number) {
+        let npc = this.layoutList.get(thisId);
+        if (!npc) {
+            return false;
+        }
+        for (let i = 0; i < 8; i++) {
+            if (!this.cardList.get(i)) {
+                this.layoutList.delete(thisId);
+                this.cardList.set(i, npc);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    moveNpc(thisId: number, pos: { x: number, y: number }) {
+        let npc = this.layoutList.get(thisId);
+        if (!npc) {
+            return false;
+        }
+        //位置有效性
+        if (pos.y > 3) {
+            console.log("尝试放置棋子到对方半区");
+            return false;
+        }
+        let posEnabled = true;
+        this.layoutList.forEach((chessNpcInfo, thisId) => {
+            if (chessNpcInfo.pos.x == pos.x && chessNpcInfo.pos.y == pos.y) {
+                posEnabled = false;
+            }
+        });
+        if (!posEnabled) {
+            console.log("尝试放置到已有棋子的位置上");
+            return false;
+        }
+        npc.pos = pos;
+        return true;
+    }
 
     /**
      * 购买卡片，从carPool移到cardArr
@@ -341,10 +381,10 @@ export class Player {
     }
 
     getLayoutListArr() {
-        let layoutArr = new Array<ChessNpcInfo>();
+        let layoutArr = new Array<{ thisId: number, npcInfo: ChessNpcInfo }>();
         if (this.layoutList) {
             this.layoutList.forEach((chessInfo, thisId) => {
-                layoutArr.push(chessInfo);
+                layoutArr.push({ thisId: chessInfo.thisId, npcInfo: chessInfo });
             });
         }
         return layoutArr;

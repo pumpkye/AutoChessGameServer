@@ -182,6 +182,26 @@ export class Room {
         }
     }
 
+    getBackNpc(playerId: number, thisId: number) {
+        let player = this.playerMap.get(playerId);
+        if (player) {
+            let ret = player.getBackNpc(thisId);
+            if (ret) {
+                this.boardcastPlayer(playerId);
+            }
+        }
+    }
+
+    moveNpc(playerId: number, thisId: number, pos: { x: number, y: number }) {
+        let player = this.playerMap.get(playerId);
+        if (player) {
+            let ret = player.moveNpc(thisId, pos);
+            if (ret) {
+                this.boardcastPlayer(playerId);
+            }
+        }
+    }
+
     /**
      * 向所有房间内的客户端广播state变化
      */
