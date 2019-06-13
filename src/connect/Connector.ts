@@ -97,7 +97,7 @@ class Connector {
         console.log(`sendMsg wsId:${wsId}, msg:${JSON.stringify(msg)}`);
         let ws = this.wsList.get(wsId) && this.wsList.get(wsId).ws;
         if (!ws || ws.readyState !== webSocket.OPEN) {
-            console.log("WebSocket instance wasn't ready...");
+            // console.log("WebSocket instance wasn't ready...");
             return;
         }
         ws.send(JSON.stringify(msg));

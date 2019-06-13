@@ -1,8 +1,8 @@
-import { ChessNpcInfo } from "./ChessNpcInfo";
 import { LevelExpConfig, ExpConfig, GoldConfig } from "../config/GameConfig";
 import { MaxLevel } from "../config/GameConfig";
-import { MsgRefreshCardPool } from "../message/RoomMsg";
+import { MsgRefreshCardPool, ChessNpcInfo } from "../message/RoomMsg";
 import { g_UserManager } from "../connect/UserManager";
+import { ChessNpcBaseData } from "../tbx_model/ChessNpcBaseData";
 
 export class Player {
     id: number;
@@ -62,6 +62,25 @@ export class Player {
         return this.npcThisIdSeed;
     }
 
+    /**
+     * 从手牌移到棋盘
+     * @param thisId 
+     * @param pos 
+     */
+    putNpcToBoard(thisId: number, pos: { x: number, y: number }) {
+        let idx = -1;
+        for (const info of this.cardList.entries()) {
+            if (info[1].thisId == thisId) {
+                idx = info[0];
+                break;
+            }
+        }
+        if (idx == -1) {
+            return false;
+        }
+        return this.moveCardToLayout(idx, pos);
+    }
+
     moveCardToLayout(idx: number, pos: { x: number, y: number }) {
         //位置有效性
         if (pos.y > 3) {
@@ -82,7 +101,105 @@ export class Player {
         this.cardList.delete(idx);
         npcInfo.pos = pos;
         this.layoutList.set(npcInfo.thisId, npcInfo);
+        this.checkLevelup(npcInfo);
+        return true;
     }
+
+    /**
+     * 
+     * @param npcInfo 新添加到棋盘的npc
+     */
+    checkLevelup(npcInfo: ChessNpcInfo) {
+        if (npcInfo.level == 3) {
+            return;
+        }
+        let sameNpcList;
+        let flag = true;
+        while (flag) {
+            flag = false;
+            sameNpcList = new Array();
+            for (const npc of this.layoutList.values()) {
+                if (npc.baseId == npcInfo.baseId && npc.level == npcInfo.level) {
+                    sameNpcList.push(npc.thisId);
+                    if (sameNpcList.length >= 3) {
+                        let newNpcInfo = this.levelUpNpc(sameNpcList, npcInfo);
+                        if (newNpcInfo) {
+                            npcInfo = newNpcInfo;
+                            flag = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    /**
+     * 将列表中的npc合成升级
+     * @param npcList 待升级的npc thisId 列表 
+     */
+    levelUpNpc(npcList: Array<number>, baseInfo: ChessNpcInfo) {
+        if (npcList.length < 3) {
+            return null;
+        }
+        let thisId = this.getNewNpcThisId()
+        let npcInfo: ChessNpcInfo = {
+            thisId,
+            baseId: baseInfo.baseId,
+            level: baseInfo.level + 1,
+            pos: baseInfo.pos,
+        }
+        for (let i = 0; i < npcList.length; i++) {
+            const thisId = npcList[i];
+            this.layoutList.delete(thisId);
+        }
+        this.layoutList.set(thisId, npcInfo);
+        return npcInfo;
+    }
+
+    // /**
+    //  * 检查场上是否有npc可以三合一
+    //  */
+    // checkLevelup() {
+    //     // let npcList = {
+    //     //     [baseId]: {
+    //     //         [level]:number,
+    //     //     }
+    //     // }
+    //     let npcList: {
+    //         [index: number]: {
+    //             [index: number]: Array<number>;
+    //         },
+    //     };
+    //     while (true) {
+    //         npcList = {};
+    //         //统计各等级npc数量
+    //         this.layoutList.forEach((npcInfo, thisId) => {
+    //             if (!npcList[npcInfo.baseId]) {
+    //                 npcList[npcInfo.baseId] = {};
+    //             }
+    //             if (!npcList[npcInfo.baseId][npcInfo.level]) {
+    //                 npcList[npcInfo.baseId][npcInfo.level] = new Array();
+    //             }
+    //             npcList[npcInfo.baseId][npcInfo.level].push(npcInfo.thisId);
+    //         });
+    //         //若存在三个一样的则升级，并且重新统计循环，若不存在则break
+    //         for (const baseId in npcList) {
+    //             if (npcList.hasOwnProperty(baseId)) {
+    //                 const baseIdList = npcList[baseId];
+    //                 for (const level in baseIdList) {
+    //                     if (baseId.hasOwnProperty(level)) {
+    //                         const count = baseIdList[level].length;
+    //                         if (count >= 3) {
+
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     /**
      * 购买卡片，从carPool移到cardArr
@@ -94,10 +211,22 @@ export class Player {
             console.log("卡池里没有这张卡");
             return false;
         }
+        let baseData = new ChessNpcBaseData(baseId);
+        let ret = this.reduceGold(baseData.quality);
+        if (!ret) {
+            console.log("金钱不足");
+            return;
+        }
         this.cardPool.delete(idx);
         for (let i = 0; i < 8; i++) {
             if (!this.cardList.get(i)) {
-                let npcInfo = new ChessNpcInfo(this.getNewNpcThisId(), baseId, 1, { x: 0, y: 0 });
+                let npcInfo = {
+                    thisId: this.getNewNpcThisId(),
+                    baseId,
+                    level: 1,
+                    pos: { x: 0, y: 0 },
+                }
+                // let npcInfo = new ChessNpcInfo(this.getNewNpcThisId(), baseId, 1, { x: 0, y: 0 });
                 this.cardList.set(i, npcInfo);
                 this.sendCardPoolToClient();
                 return true;

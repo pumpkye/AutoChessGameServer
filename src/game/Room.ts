@@ -14,8 +14,8 @@ export class Room {
      * 房主
      */
     masterId: number;
-    userMap = new Map<number, Player>();
-    userCount = 0;
+    playerMap = new Map<number, Player>();
+    playerCount = 0;
     cardPool: CardPool;
 
     isGameStart = false;
@@ -44,7 +44,7 @@ export class Room {
         switch (this.roundState) {
             case RoundState.layout:
                 this.autoAddGoldAndExp();
-                this.refreshAllUserPool();
+                this.refreshAllPlayerPool();
                 this.boardcastAllPlayer();
                 break;
             case RoundState.prepare:
@@ -72,8 +72,8 @@ export class Room {
         } else {
             this.cardPool.init();
         }
-        this.userMap.forEach((user, userId) => {
-            user.init();
+        this.playerMap.forEach((player, playerId) => {
+            player.init();
         });
         g_GameManager.addGameRoom(this);
 
@@ -83,7 +83,7 @@ export class Room {
         this.turnToNextState();
     }
 
-    addUser(userId: number, name?: string) {
+    addPlayer(playerId: number, name?: string) {
         if (this.isGameStart) {
             console.log("游戏已开始")
         }
@@ -91,83 +91,93 @@ export class Room {
             console.log("房间已满");
             return false;
         }
-        let user = new Player(userId, this.id);
+        let player = new Player(playerId, this.id);
         if (name) {
-            user.name = name;
+            player.name = name;
         }
-        this.userMap.set(userId, user);
-        this.userCount++;
-        if (this.userCount == 1) {
-            this.masterId = userId;
+        this.playerMap.set(playerId, player);
+        this.playerCount++;
+        if (this.playerCount == 1) {
+            this.masterId = playerId;
         }
         return true;
     }
 
-    removeUser(userId: number) {
-        let ret = this.userMap.delete(userId);
+    removePlayer(playerId: number) {
+        let ret = this.playerMap.delete(playerId);
         if (ret) {
-            this.userCount--;
+            this.playerCount--;
         }
-        if (userId == this.masterId && this.userCount > 0) {
-            for (const user of this.userMap.values()) {
-                this.masterId = user.id;
+        if (playerId == this.masterId && this.playerCount > 0) {
+            for (const player of this.playerMap.values()) {
+                this.masterId = player.id;
                 break;
             }
         }
     }
 
     get isFull() {
-        return this.userCount == RoomConfig.maxUser || this.isGameStart;
+        return this.playerCount == RoomConfig.maxUser || this.isGameStart;
     }
 
     autoAddGoldAndExp() {
-        this.userMap.forEach((user, userId) => {
-            user.autoAddGold();
-            user.addExp(ExpConfig.everyRound);
+        this.playerMap.forEach((player, playerId) => {
+            player.autoAddGold();
+            player.addExp(ExpConfig.everyRound);
 
         });
     }
 
-    refreshAllUserPool() {
+    refreshAllPlayerPool() {
         //将所有玩家持有的cardPool内的卡放回卡池
-        this.userMap.forEach((user, userId) => {
-            user.cardPool.forEach((baseId, idx) => {
+        this.playerMap.forEach((player, playerId) => {
+            player.cardPool.forEach((baseId, idx) => {
                 this.cardPool.pushBackToCardGroup(baseId);
             });
         });
-        this.userMap.forEach((user, userId) => {
-            user.cardPool = this.cardPool.getCardGroup(user.level);
-            user.sendCardPoolToClient();
+        this.playerMap.forEach((player, playerId) => {
+            player.cardPool = this.cardPool.getCardGroup(player.level);
+            player.sendCardPoolToClient();
         });
     }
 
-    reqRefreshUserPool(userId: number) {
-        let user = this.userMap.get(userId);
-        if (!user) {
+    reqRefreshPlayerPool(playId: number) {
+        let player = this.playerMap.get(playId);
+        if (!player) {
             return;
         }
-        let ret = user.reduceGold(GoldConfig.refreshPoolCost);
+        let ret = player.reduceGold(GoldConfig.refreshPoolCost);
         if (ret) {
-            this.refreshUserPool(user);
-            this.boardcastPlayer(userId);
+            this.refreshPlayerPool(player);
+            this.boardcastPlayer(playId);
         }
     }
 
-    refreshUserPool(user: Player) {
-        user.cardPool.forEach((value, key) => {
+    refreshPlayerPool(player: Player) {
+        player.cardPool.forEach((value, key) => {
             this.cardPool.pushBackToCardGroup(value);
         });
-        user.cardPool = this.cardPool.getCardGroup(user.level);
-        user.sendCardPoolToClient();
+        player.cardPool = this.cardPool.getCardGroup(player.level);
+        player.sendCardPoolToClient();
     }
 
-    buyCard(userId: number, carIdx: number) {
-        let user = this.userMap.get(userId);
-        if (user) {
-            let ret = user.buyCard(carIdx);
+    buyCard(playId: number, carIdx: number) {
+        let player = this.playerMap.get(playId);
+        if (player) {
+            let ret = player.buyCard(carIdx);
             if (ret) {
                 //向房间内广播该玩家的手牌变化
-                this.boardcastPlayer(userId);
+                this.boardcastPlayer(playId);
+            }
+        }
+    }
+
+    putNpcToBoard(playerId: number, thisId: number, pos: { x: number, y: number }) {
+        let player = this.playerMap.get(playerId);
+        if (player) {
+            let ret = player.putNpcToBoard(thisId, pos);
+            if (ret) {
+                this.boardcastPlayer(playerId);
             }
         }
     }
@@ -203,17 +213,17 @@ export class Room {
         msg.data.roomId = this.id;
         msg.data.refreshAll = true;
         let playerList = new Array();
-        this.userMap.forEach((user, userId) => {
+        this.playerMap.forEach((player, playerId) => {
             let playerInfo: PlayerInfo = {
-                id: user.id,
-                name: user.name,
-                level: user.level,
-                exp: user.exp,
-                gold: user.gold,
-                winContinueCount: user.winContinueCount,
-                loseContinueCount: user.loseContinueCount,
-                cardList: user.getCardListArr(),
-                layoutList: user.getLayoutListArr(),
+                id: player.id,
+                name: player.name,
+                level: player.level,
+                exp: player.exp,
+                gold: player.gold,
+                winContinueCount: player.winContinueCount,
+                loseContinueCount: player.loseContinueCount,
+                cardList: player.getCardListArr(),
+                layoutList: player.getLayoutListArr(),
             }
             playerList.push(playerInfo);
         });
@@ -225,7 +235,7 @@ export class Room {
      * 将某个player的信息向房间广播
      */
     boardcastPlayer(playerId: number) {
-        let player = this.userMap.get(playerId);
+        let player = this.playerMap.get(playerId);
         if (!player) {
             return;
         }
@@ -254,8 +264,8 @@ export class Room {
      * 向房间内广播消息
      */
     sendMsgToRoom(msg: MessageBase) {
-        this.userMap.forEach((user, userId) => {
-            g_UserManager.sendMsgToUser(userId, msg);
+        this.playerMap.forEach((player, playerId) => {
+            g_UserManager.sendMsgToUser(playerId, msg);
         });
     }
 }

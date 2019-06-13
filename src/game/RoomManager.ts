@@ -1,5 +1,5 @@
 import { Room } from "./Room";
-import { MsgReqEnterFreeRoom, MsgResEnterRoom, MsgRefreshRoomPlayer, MsgBuyCard, MsgReqStartGame, MsgReqRefreshCardPool } from "../message/RoomMsg";
+import { MsgReqEnterFreeRoom, MsgResEnterRoom, MsgRefreshRoomPlayer, MsgBuyCard, MsgReqStartGame, MsgReqRefreshCardPool, MsgPutNpcToBoard } from "../message/RoomMsg";
 import { g_UserManager } from "../connect/UserManager";
 
 class RoomManager {
@@ -42,7 +42,7 @@ class RoomManager {
         let roomId = this.findFreeRoom();
         let room = this.getRoom(roomId);
         let user = g_UserManager.getUser(userId);
-        let ret = room.addUser(userId, user.name);
+        let ret = room.addPlayer(userId, user.name);
         if (ret) {
             this.userRoomMap.set(userId, roomId);
 
@@ -58,7 +58,7 @@ class RoomManager {
         if (!room) {
             return;
         }
-        room.removeUser(userId);
+        room.removePlayer(userId);
         this.userRoomMap.delete(userId);
     }
 
@@ -101,7 +101,15 @@ class RoomManager {
         if (!room) {
             return;
         }
-        room.reqRefreshUserPool(userId);
+        room.reqRefreshPlayerPool(userId);
+    }
+
+    msgPutNpcToBoard(msg: MsgPutNpcToBoard["data"], userId: number) {
+        let room = this.getUserRoom(userId);
+        if (!room) {
+            return;
+        }
+        room.putNpcToBoard(userId, msg.thisId, msg.pos);
     }
 }
 
