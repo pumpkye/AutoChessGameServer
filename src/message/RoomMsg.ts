@@ -117,7 +117,7 @@ export interface PlayerInfo {
     //手牌
     cardList: Array<{ idx: number, npcInfo: ChessNpcInfo }>;
     //布局
-    layoutList: Array<{ thisId: number, npcInfo: ChessNpcInfo }>;
+    layoutList: Array<ChessNpcInfo>;
     // layoutList: Array<ChessNpcInfo>;
 }
 
@@ -206,7 +206,7 @@ export class MsgBattleResult extends MessageBase {
     }
 }
 
-interface Result {
+export interface Result {
     /**
      * 主场玩家id
      */

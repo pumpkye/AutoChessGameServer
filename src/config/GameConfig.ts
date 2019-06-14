@@ -140,7 +140,7 @@ export const RoomConfig = {
 
 export const RoundConfig: any = {
     roundStateTime: {
-        [1]: 60000,
+        [1]: 30000,
         [2]: 3000,
         [3]: 2000,
         [4]: 1000,

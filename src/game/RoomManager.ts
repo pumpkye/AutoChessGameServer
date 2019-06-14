@@ -1,5 +1,5 @@
 import { Room } from "./Room";
-import { MsgReqEnterFreeRoom, MsgResEnterRoom, MsgRefreshRoomPlayer, MsgBuyCard, MsgReqStartGame, MsgReqRefreshCardPool, MsgPutNpcToBoard, MsgGetBackNpc, MsgMoveNpc } from "../message/RoomMsg";
+import { MsgReqEnterFreeRoom, MsgResEnterRoom, MsgRefreshRoomPlayer, MsgBuyCard, MsgReqStartGame, MsgReqRefreshCardPool, MsgPutNpcToBoard, MsgGetBackNpc, MsgMoveNpc, Result } from "../message/RoomMsg";
 import { g_UserManager } from "../connect/UserManager";
 
 class RoomManager {
@@ -74,6 +74,14 @@ class RoomManager {
             return;
         }
         return room;
+    }
+
+    setBattleResult(roomId: number, roundIdx: number, resultList: Array<Result>) {
+        let room = this.roomList.get(roomId);
+        if (!room) {
+            return;
+        }
+        room.boardcastBattleResult(roundIdx, resultList);
     }
 
     msgReqStartGame(msg: MsgReqStartGame["data"], userId: number) {

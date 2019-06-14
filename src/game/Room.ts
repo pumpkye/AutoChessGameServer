@@ -4,8 +4,10 @@ import { CardPool } from "./CardPool";
 import { RoomConfig, RoundConfig, ExpConfig, GoldConfig } from "../config/GameConfig";
 import { g_UserManager } from "../connect/UserManager";
 import { MessageBase } from "../message/MessagegBase";
-import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState, MsgResStartGame, RoundState } from "../message/RoomMsg";
+import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState, MsgResStartGame, RoundState, Result, MsgBattleResult } from "../message/RoomMsg";
 import { g_GameManager } from "./GameManager";
+import { g_RmBattleManager } from "../remote/RmBattleManager";
+import { g_Util } from "../Util";
 
 
 export class Room {
@@ -62,6 +64,10 @@ export class Room {
     }
 
     startGame() {
+        if (this.playerCount < 2) {
+            console.log("房间内人数<2");
+            return;
+        }
         this.isGameStart = true;
         this.roundIdx = 1;
         this.roundState = RoundState.none;
@@ -216,13 +222,56 @@ export class Room {
     /**
      * 调用另一台battle服务器计算战斗结果
      */
-    async doBattle() {
+    doBattle() {
         // let ret = await sendBattle();
-        this.boardcastBattleResult();
+        let roomId = this.id;
+        let roundIdx = this.roundIdx;
+        let matchInfo = this.generateMatch();
+        let layoutList = Array();
+        this.playerMap.forEach((player, playerId) => {
+            let npcList = player.getLayoutListArr();
+            layoutList.push({
+                playerId,
+                npcList,
+            });
+        });
+        g_RmBattleManager.reqBattleResult(roomId, roundIdx, matchInfo, layoutList);
+        // this.boardcastBattleResult();
     }
 
-    boardcastBattleResult() {
+    /**
+     * 生成对局，先用简单的纯随机（听说总是匹配到打不过的人？）
+     */
+    generateMatch() {
+        let matchInfo: Array<{ playerAId: number, playerBId: number }> = new Array();
+        let tempList = new Array<number>();
+        this.playerMap.forEach((player, playerId) => {
+            tempList.push(playerId);
+        });
+        let playerList = new Array<number>();
+        let num = tempList.length;
+        for (let i = 0; i < num; i++) {
+            let rad = g_Util.getRandomNumber(tempList.length);
+            playerList.push(tempList[rad - 1]);
+            tempList.splice(rad - 1, 1);
+        }
+        for (let i = 0; i < num; i++) {
+            let aId = playerList[i];
+            let bId = playerList[i + 1];
+            if (i + 1 == num) {
+                bId = playerList[0];
+            }
+            matchInfo.push({ playerAId: aId, playerBId: bId });
+        }
+        return matchInfo;
+    }
 
+    boardcastBattleResult(roundIdx: number, resultList: Array<Result>) {
+        if (roundIdx == this.roundIdx) {
+            let msg = new MsgBattleResult();
+            msg.data.resultList = resultList;
+            this.sendMsgToRoom(msg);
+        }
     }
 
     /**

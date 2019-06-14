@@ -381,10 +381,10 @@ export class Player {
     }
 
     getLayoutListArr() {
-        let layoutArr = new Array<{ thisId: number, npcInfo: ChessNpcInfo }>();
+        let layoutArr = new Array<ChessNpcInfo>();
         if (this.layoutList) {
             this.layoutList.forEach((chessInfo, thisId) => {
-                layoutArr.push({ thisId: chessInfo.thisId, npcInfo: chessInfo });
+                layoutArr.push(chessInfo);
             });
         }
         return layoutArr;
