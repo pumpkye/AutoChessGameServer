@@ -1,4 +1,4 @@
-import { LevelExpConfig, ExpConfig, GoldConfig } from "../config/GameConfig";
+import { LevelExpConfig, ExpConfig, GoldConfig, hpConfig } from "../config/GameConfig";
 import { MaxLevel } from "../config/GameConfig";
 import { MsgRefreshCardPool, ChessNpcInfo } from "../message/RoomMsg";
 import { g_UserManager } from "../connect/UserManager";
@@ -11,6 +11,7 @@ export class Player {
     level: number;
     exp: number;
     gold: number;
+    hp: number;
     /**
      * 连胜计数
      */
@@ -45,6 +46,7 @@ export class Player {
      * 每局游戏开始时初始化
      */
     init() {
+        this.hp = hpConfig.maxHp;
         this.level = 0;
         this.exp = 0;
         this.gold = 0;
@@ -345,7 +347,7 @@ export class Player {
         this.addGold(gold);
     }
 
-    roundLost() {
+    roundLost(point: number) {
         this.winContinueCount += 0;
         this.loseContinueCount++;
         let gold = 0;
@@ -355,6 +357,8 @@ export class Player {
             gold += GoldConfig.winContinue[this.winContinueCount - 1];
         }
         this.addGold(gold);
+
+        this.hp = this.hp - point;
     }
 
     /**

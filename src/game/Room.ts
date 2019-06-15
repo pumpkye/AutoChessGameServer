@@ -266,12 +266,30 @@ export class Room {
         return matchInfo;
     }
 
-    boardcastBattleResult(roundIdx: number, resultList: Array<Result>) {
-        if (roundIdx == this.roundIdx) {
-            let msg = new MsgBattleResult();
-            msg.data.resultList = resultList;
-            this.sendMsgToRoom(msg);
+    calBattleResult(roundIdx: number, resultList: Array<Result>) {
+        if (roundIdx != this.roundIdx) {
+            console.log("错误的战斗结果")
+            return;
         }
+        for (let i = 0; i < resultList.length; i++) {
+            const result = resultList[i];
+            let player = this.playerMap.get(result.playerId);
+            if (player) {
+                if (result.win) {
+                    player.roundWin();
+                } else {
+                    player.roundLost(result.point);
+                }
+            }
+        }
+        this.boardcastBattleResult(resultList);
+        this.boardcastAllPlayer();
+    }
+
+    boardcastBattleResult(resultList: Array<Result>) {
+        let msg = new MsgBattleResult();
+        msg.data.resultList = resultList;
+        this.sendMsgToRoom(msg);
     }
 
     /**
@@ -287,6 +305,7 @@ export class Room {
                 id: player.id,
                 name: player.name,
                 level: player.level,
+                hp: player.hp,
                 exp: player.exp,
                 gold: player.gold,
                 winContinueCount: player.winContinueCount,
@@ -315,6 +334,7 @@ export class Room {
         let playerInfo: PlayerInfo = {
             id: player.id,
             name: player.name,
+            hp: player.hp,
             level: player.level,
             exp: player.exp,
             gold: player.gold,

@@ -81,7 +81,7 @@ class RoomManager {
         if (!room) {
             return;
         }
-        room.boardcastBattleResult(roundIdx, resultList);
+        room.calBattleResult(roundIdx, resultList);
     }
 
     msgReqStartGame(msg: MsgReqStartGame["data"], userId: number) {
