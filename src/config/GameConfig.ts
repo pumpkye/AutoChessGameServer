@@ -148,5 +148,5 @@ export const RoundConfig: any = {
 }
 
 export const hpConfig: any = {
-    maxHp: 50,
+    maxHp: 10,
 }

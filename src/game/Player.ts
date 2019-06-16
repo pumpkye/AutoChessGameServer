@@ -358,7 +358,15 @@ export class Player {
         }
         this.addGold(gold);
 
-        this.hp = this.hp - point;
+        this.reduceHp(point);
+    }
+
+    reduceHp(hp: number) {
+        this.hp = this.hp - hp;
+    }
+
+    isDead() {
+        return this.hp <= 0;
     }
 
     /**

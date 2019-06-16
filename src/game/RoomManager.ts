@@ -25,6 +25,10 @@ class RoomManager {
         return room.id;
     }
 
+    destroyRoom(roomId: number) {
+        this.roomList.delete(roomId);
+    }
+
     getRoom(id: number) {
         return this.roomList.get(id);
     }

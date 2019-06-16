@@ -4,10 +4,11 @@ import { CardPool } from "./CardPool";
 import { RoomConfig, RoundConfig, ExpConfig, GoldConfig } from "../config/GameConfig";
 import { g_UserManager } from "../connect/UserManager";
 import { MessageBase } from "../message/MessagegBase";
-import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState, MsgResStartGame, RoundState, Result, MsgBattleResult } from "../message/RoomMsg";
+import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState, MsgResStartGame, RoundState, Result, MsgBattleResult, MsgGameOver } from "../message/RoomMsg";
 import { g_GameManager } from "./GameManager";
 import { g_RmBattleManager } from "../remote/RmBattleManager";
 import { g_Util } from "../Util";
+import { g_RoomManager } from "./RoomManager";
 
 
 export class Room {
@@ -18,6 +19,7 @@ export class Room {
     masterId: number;
     playerMap = new Map<number, Player>();
     playerCount = 0;
+    aliveCount = 0;
     cardPool: CardPool;
 
     isGameStart = false;
@@ -72,6 +74,7 @@ export class Room {
         this.roundIdx = 1;
         this.roundState = RoundState.none;
         this.roundStateTime = 0;
+        this.aliveCount = this.playerCount;
 
         if (!this.cardPool) {
             this.cardPool = new CardPool();
@@ -87,6 +90,19 @@ export class Room {
         msg.data.isStart = true;
         this.sendMsgToRoom(msg);
         this.turnToNextState();
+    }
+
+    GameOver() {
+        this.isGameStart = false;
+        g_GameManager.removeGameRoom(this.id);
+        let msg = new MsgGameOver();
+        this.playerMap.forEach((player, playerId) => {
+            if (!player.isDead()) {
+                msg.data.winnerId = playerId;
+            }
+        });
+        this.sendMsgToRoom(msg);
+        g_RoomManager.destroyRoom(this.id);
     }
 
     addPlayer(playerId: number, name?: string) {
@@ -246,7 +262,9 @@ export class Room {
         let matchInfo: Array<{ playerAId: number, playerBId: number }> = new Array();
         let tempList = new Array<number>();
         this.playerMap.forEach((player, playerId) => {
-            tempList.push(playerId);
+            if (!player.isDead()) {
+                tempList.push(playerId);
+            }
         });
         let playerList = new Array<number>();
         let num = tempList.length;
@@ -279,11 +297,18 @@ export class Room {
                     player.roundWin();
                 } else {
                     player.roundLost(result.point);
+                    if (player.isDead()) {
+                        this.aliveCount--;
+                    }
                 }
             }
         }
         this.boardcastBattleResult(resultList);
         this.boardcastAllPlayer();
+
+        if (this.aliveCount <= 1) {
+            this.GameOver();
+        }
     }
 
     boardcastBattleResult(resultList: Array<Result>) {
