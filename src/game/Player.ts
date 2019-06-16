@@ -1,4 +1,4 @@
-import { LevelExpConfig, ExpConfig, GoldConfig, hpConfig } from "../config/GameConfig";
+import { LevelExpConfig, ExpConfig, GoldConfig, hpConfig, LevelCountConfig } from "../config/GameConfig";
 import { MaxLevel } from "../config/GameConfig";
 import { MsgRefreshCardPool, ChessNpcInfo } from "../message/RoomMsg";
 import { g_UserManager } from "../connect/UserManager";
@@ -278,6 +278,33 @@ export class Player {
         return false;
     }
 
+    /**
+     * 
+     * @param thisId 
+     * @returns 0:fail,1:从手牌删除,2:从场上删除
+     */
+    sellCard(thisId: number) {
+        for (let i = 0; i < 8; i++) {
+            const npc = this.cardList.get(i);
+            if (npc && npc.thisId == thisId) {
+                let baseData = new ChessNpcBaseData(npc.baseId);
+                let sellPrice = Math.floor(baseData.quality * Math.pow(3, npc.level - 1) * 0.7)
+                this.addGold(sellPrice);
+                this.cardList.delete(i);
+                return true;
+            }
+        }
+        let npc = this.layoutList.get(thisId);
+        if (npc) {
+            let baseData = new ChessNpcBaseData(npc.baseId);
+            let sellPrice = Math.floor(baseData.quality * Math.pow(3, npc.level - 1) * 0.7)
+            this.addGold(sellPrice);
+            this.layoutList.delete(thisId);
+            return true;
+        }
+        return false;
+    }
+
     addExp(exp: number) {
         if (this.level == MaxLevel) {
             console.log("已经是最大等级");
@@ -363,6 +390,49 @@ export class Player {
 
     reduceHp(hp: number) {
         this.hp = this.hp - hp;
+    }
+
+    /**
+     * 检查场上npc数量，超过当前等级人口上限则撤回手牌，手牌满的卖掉，收回金币
+     */
+    checkNpcNum() {
+        let maxNpcCount = LevelCountConfig[this.level];
+        let npcCount = this.getLayoutNpcCount();
+        if (npcCount <= maxNpcCount) {
+            return true;
+        }
+        let delCount = npcCount - maxNpcCount;
+        for (let i = 0; i < delCount; i++) {
+            let minNpc: ChessNpcInfo = null;
+            this.layoutList.forEach((npcInfo, thisId) => {
+                if (!minNpc) {
+                    minNpc = npcInfo;
+                } else {
+                    if (npcInfo.level < minNpc.level) {
+                        minNpc = npcInfo;
+                    } else if (npcInfo.level == minNpc.level) {
+                        let baseA = new ChessNpcBaseData(npcInfo.baseId);
+                        let baseB = new ChessNpcBaseData(minNpc.baseId);
+                        if (baseA.quality < baseB.quality) {
+                            minNpc = npcInfo;
+                        }
+                    }
+                }
+            });
+            let ret = this.getBackNpc(minNpc.thisId);
+            if (!ret) {
+                this.sellCard(minNpc.thisId);
+            }
+        }
+        return false;
+    }
+
+    getLayoutNpcCount() {
+        let npcCount = 0;
+        this.layoutList.forEach((npc, npcId) => {
+            npcCount++;
+        });
+        return npcCount;
     }
 
     isDead() {

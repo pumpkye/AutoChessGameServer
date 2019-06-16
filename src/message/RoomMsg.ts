@@ -162,6 +162,13 @@ export class MsgBuyCard extends MessageBase {
     }
 }
 
+export class MsgSellCard extends MessageBase {
+    name = "msgSellCard";
+    data: {
+        thisId: number;
+    }
+}
+
 /**
  * 移动棋盘上的npc
  */

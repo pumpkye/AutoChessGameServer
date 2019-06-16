@@ -1,5 +1,5 @@
 import { Room } from "./Room";
-import { MsgReqEnterFreeRoom, MsgResEnterRoom, MsgRefreshRoomPlayer, MsgBuyCard, MsgReqStartGame, MsgReqRefreshCardPool, MsgPutNpcToBoard, MsgGetBackNpc, MsgMoveNpc, Result } from "../message/RoomMsg";
+import { MsgReqEnterFreeRoom, MsgResEnterRoom, MsgRefreshRoomPlayer, MsgBuyCard, MsgReqStartGame, MsgReqRefreshCardPool, MsgPutNpcToBoard, MsgGetBackNpc, MsgMoveNpc, Result, MsgSellCard } from "../message/RoomMsg";
 import { g_UserManager } from "../connect/UserManager";
 
 class RoomManager {
@@ -106,6 +106,14 @@ class RoomManager {
             return;
         }
         room.buyCard(userId, msg.idx);
+    }
+
+    msgSellCard(msg: MsgSellCard['data'], userId: number) {
+        let room = this.getUserRoom(userId);
+        if (!room) {
+            return;
+        }
+        room.sellCard(userId, msg.thisId);
     }
 
     msgReqRefreshCardPool(msg: MsgReqRefreshCardPool["data"], userId: number) {

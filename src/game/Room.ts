@@ -1,7 +1,7 @@
 import { Player } from "./Player";
 
 import { CardPool } from "./CardPool";
-import { RoomConfig, RoundConfig, ExpConfig, GoldConfig } from "../config/GameConfig";
+import { RoomConfig, RoundConfig, ExpConfig, GoldConfig, LevelCountConfig } from "../config/GameConfig";
 import { g_UserManager } from "../connect/UserManager";
 import { MessageBase } from "../message/MessagegBase";
 import { MsgRefreshRoomPlayer, PlayerInfo, MsgRoundState, MsgResStartGame, RoundState, Result, MsgBattleResult, MsgGameOver } from "../message/RoomMsg";
@@ -52,9 +52,10 @@ export class Room {
                 this.boardcastAllPlayer();
                 break;
             case RoundState.prepare:
+                this.checkNpcNum();
                 break;
             case RoundState.battle:
-                //todo 调用battleServer计算战斗结果
+                //调用battleServer计算战斗结果
                 this.doBattle();
                 break;
             case RoundState.battleEnd:
@@ -183,13 +184,23 @@ export class Room {
         player.sendCardPoolToClient();
     }
 
-    buyCard(playId: number, carIdx: number) {
-        let player = this.playerMap.get(playId);
+    buyCard(playerId: number, carIdx: number) {
+        let player = this.playerMap.get(playerId);
         if (player) {
             let ret = player.buyCard(carIdx);
             if (ret) {
                 //向房间内广播该玩家的手牌变化
-                this.boardcastPlayer(playId);
+                this.boardcastPlayer(playerId);
+            }
+        }
+    }
+
+    sellCard(playerId: number, thisId: number) {
+        let player = this.playerMap.get(playerId);
+        if (player) {
+            let ret = player.sellCard(thisId);
+            if (ret) {
+                this.boardcastPlayer(playerId);
             }
         }
     }
@@ -225,14 +236,15 @@ export class Room {
     }
 
     /**
-     * 向所有房间内的客户端广播state变化
+     * 检查阵容的npc数量，超过当前等级上限的撤回手牌，手牌满的卖掉，收回金币
      */
-    boardcastBattleState() {
-        let msg = new MsgRoundState()
-        msg.data.roundIdx = this.roundIdx;
-        msg.data.state = this.roundState;
-        msg.data.finishTime = g_GameManager.timeStamp + this.roundStateTime;
-        this.sendMsgToRoom(msg);
+    checkNpcNum() {
+        this.playerMap.forEach((player, playerId) => {
+            let ret = player.checkNpcNum();
+            if (!ret) {
+                this.boardcastPlayer(playerId);
+            }
+        });
     }
 
     /**
@@ -311,6 +323,21 @@ export class Room {
         }
     }
 
+    /**
+     * 向所有房间内的客户端广播state变化
+     */
+    boardcastBattleState() {
+        let msg = new MsgRoundState()
+        msg.data.roundIdx = this.roundIdx;
+        msg.data.state = this.roundState;
+        msg.data.finishTime = g_GameManager.timeStamp + this.roundStateTime;
+        this.sendMsgToRoom(msg);
+    }
+
+    /**
+     * 广播战斗结果
+     * @param resultList 
+     */
     boardcastBattleResult(resultList: Array<Result>) {
         let msg = new MsgBattleResult();
         msg.data.resultList = resultList;
