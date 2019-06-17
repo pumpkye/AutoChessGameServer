@@ -104,6 +104,12 @@ export class Room {
         });
         this.sendMsgToRoom(msg);
         g_RoomManager.destroyRoom(this.id);
+
+        let userList = new Array<number>();
+        this.playerMap.forEach((player, playerId) => {
+            userList.push(playerId);
+        });
+        g_UserManager.clearDisConnectUser(userList);
     }
 
     addPlayer(playerId: number, name?: string) {
@@ -137,6 +143,7 @@ export class Room {
                 break;
             }
         }
+        this.boardcastAllPlayer();
     }
 
     get isFull() {

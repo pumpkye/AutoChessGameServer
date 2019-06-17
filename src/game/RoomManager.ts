@@ -59,11 +59,11 @@ class RoomManager {
 
     removeUserFromRoom(userId: number) {
         let room = this.getUserRoom(userId);
+        this.userRoomMap.delete(userId);
         if (!room) {
             return;
         }
         room.removePlayer(userId);
-        this.userRoomMap.delete(userId);
     }
 
     getUserRoom(userId: number) {

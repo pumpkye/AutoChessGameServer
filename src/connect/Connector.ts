@@ -50,10 +50,21 @@ class Connector {
     removeWs(wsId: number) {
         let userId = this.getWsUserId(wsId);
         if (userId) {
-            console.log(`删除User${userId}`);
-            g_UserManager.removeUser(userId);
+            g_UserManager.disConnectUser(userId);
         }
+        //断开连接时仅仅从wsList里删除，只有一局游戏结束时才清理不在线的user
         this.wsList.delete(wsId);
+    }
+
+    /**
+     * 断开某个连接
+     * @param wsId 
+     */
+    disConnect(wsId: number) {
+        let ws = this.wsList.get(wsId);
+        if (ws) {
+            ws.ws.close();
+        }
     }
 
     setWsUserId(wsId: number, userId: number) {
@@ -77,6 +88,10 @@ class Connector {
         //建立socket之后的第一条消息，dispatch的时候传递wsId
         if (msg.name === "msgReqUserInfo") {
             g_UserManager.msgReqUserInfo(msg.data, wsId);
+            return;
+        }
+        if (msg.name == "msgReqLogin") {
+            g_UserManager.msgReqLogin(msg.data, wsId);
             return;
         }
         //其他消息传递userId
