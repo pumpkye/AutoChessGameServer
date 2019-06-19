@@ -239,3 +239,9 @@ export class MsgGameOver extends MessageBase {
         winnerId: number;
     }
 }
+
+export class MsgBuyExp extends MessageBase {
+    name = "msgBuyExp";
+    data: {
+    }
+}

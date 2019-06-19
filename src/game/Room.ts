@@ -64,6 +64,9 @@ export class Room {
                 break;
         }
         this.boardcastBattleState();
+        if (this.roundIdx > 40) {
+            this.GameOver();
+        }
     }
 
     startGame() {
@@ -236,6 +239,16 @@ export class Room {
         let player = this.playerMap.get(playerId);
         if (player) {
             let ret = player.moveNpc(thisId, pos);
+            if (ret) {
+                this.boardcastPlayer(playerId);
+            }
+        }
+    }
+
+    buyExp(playerId: number) {
+        let player = this.playerMap.get(playerId);
+        if (player) {
+            let ret = player.buyExp();
             if (ret) {
                 this.boardcastPlayer(playerId);
             }

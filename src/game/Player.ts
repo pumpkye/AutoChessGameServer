@@ -332,6 +332,7 @@ export class Player {
         }
         this.gold -= ExpConfig.buyCost;
         this.addExp(ExpConfig.buyExp);
+        return true;
     }
 
     /**
